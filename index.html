@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>XSS Demo (Vulnerable)</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    padding: 40px;
+}
+input, button {
+    padding: 8px;
+    font-size: 16px;
+}
+#output {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+</style>
+</head>
+<body>
+
+<h2>Simple Input Demo</h2>
+
+<form id="form">
+    <input type="text" id="userInput" placeholder="Type something">
+    <button type="submit">Submit</button>
+</form>
+
+<div id="output"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // 1. YOUR CONFIG HERE (Paste from Firebase Console)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxD95nLUCRIObTWRXjobI1536Ov6heP",
+    authDomain: "practice-5cbac.firebaseapp.com",
+    databaseURL: "https://practice-5cbac-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "practice-5cbac",
+    storageBucket: "practice-5cbac.firebasestorage.app",
+    messagingSenderId: "433054469808",
+    appId: "1:433054469808:web:c1fa36a35072178547f575"
+  };
+
+  // 2. Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+  const dbRef = database.ref("global_input");
+
+  const form = document.getElementById("form");
+  const input = document.getElementById("userInput");
+  const output = document.getElementById("output");
+
+  // 3. SEND data to Firebase on Submit
+  form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      // This "pushes" the value (and your payload) to the cloud
+      dbRef.set({
+          content: input.value
+      });
+      input.value = ""; // Clear input
+  });
+
+  // 4. RECEIVE data from Firebase (This makes it Stored XSS)
+  dbRef.on("value", (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.content) {
+          // ❌ VULNERABLE: Injects whatever is in the database into the UI
+          output.innerHTML = data.content;
+      }
+  });
+</script>
+
+</body>
+</html>
